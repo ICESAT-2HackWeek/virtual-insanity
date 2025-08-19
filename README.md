@@ -1,6 +1,6 @@
 # Virtual Insanity Team
 
-## Virtual Stores and Alternative Access Patterns to Mission Data
+**Virtual Stores and Alternative Access Patterns to Mission Data**
 
 This project will explore the potential use of VirtualiZarr, Geoparquet etc as means to improve access patterns to 
 data from the ICESat-2 mission, especially the trajectory-based L2 datasets, ATL03, ATL06 and ATL08.
@@ -14,13 +14,14 @@ Feel free to add more names!
 
 | Name | Personal goals | Can help with | Role |
 | ------------- | ------------- | ------------- | ------------- |
-| Andy Barrett | I would like to <fill>  | I can help with understanding our dataset, programming in R  | Contributor |
-| Chuck Daniels | I would like to <fill> | machine learning and python (scipy, scikit-learn) | Contributor  |
-| Joe Kennedy | I would like to <fill> | machine learning and python (scipy, scikit-learn) | Contributor |
-| Miguel Jimenez-Urias | I would like to <fill> | GitHub, Jupyter, cloud computing | Contributor |
-| Owen Littlejohns | I would like to <fill> | I am familiar with our dataset | Contributor   |
+| Andy Barrett | I would like to <fill>        | ... | Contributor |
+| Chuck Daniels | I would like to <fill>       | ... | Contributor  |
+| Joe Kennedy | I would like to <fill>         | ... | Contributor |
+| Miguel Jimenez-Urias | I would like to <fill>| ... | Contributor |
+| Owen Littlejohns | I would like to <fill>    | ... | Contributor   |
 | Luis Lopez | I woud like to push HDF5 to the limit, explore cloud native Geo-HDF5 | ... | Contributor/Project Lead |
 | Ben Smith | I would like to <fill> | ... | Contributor |
+
 
 ## The problem
 
@@ -58,28 +59,28 @@ Subsetting a region of interest for ATL06(and hopefully ATL03) using the followi
 
 The result of our experiment should be a geoparquet file with all the photon data from the 6 ground tracks containing the following variables in the dataframe:
 
-**ATL06**: lat, long, time, h_li, h_li_sigma, atl06_quality_summary, track_id
-**ATL03**: TBD (Optional for this week)
-**ATL08**: TBD (Optional for this week)
+* **ATL06**: lat, long, time, h_li, h_li_sigma, atl06_quality_summary, track_id
+* **ATL03**: TBD (Optional for this week)
+* **ATL08**: TBD (Optional for this week)
 
 ## Existing methods
 
-### SlideRule: As of now this would be the best case scenario to [subset a ROI](https://github.com/ICESAT-2HackWeek/icesat2-cookbook/blob/main/notebooks/draft/workflows/greenland_dhdt/dhdt_40km_tile.ipynb)
+### 1. SlideRule: As of now this would be the best case scenario to [subset a ROI](https://github.com/ICESAT-2HackWeek/icesat2-cookbook/blob/main/notebooks/draft/workflows/greenland_dhdt/dhdt_40km_tile.ipynb)
 * SlideRule is very efficient on getting the data in parallel thanks to the use of an elastic cluster and the [H5Coro](https://github.com/SlideRuleEarth/h5coro) client library. This library uses a pool of threads to fetch data concurrently bypassing the HDF5 client library limitations. 
 * The only downside of SlideRule is that it requires a service and thus there is an overhead in terms of costs and maintainability. 
 * Time to a Geoparquet file using our Greenland ROI (ATL06): **30 seconds**
 
-### Harmony Trajectory Subsetter:
+### 2. Harmony Trajectory Subsetter:
 * We haven't benchmarked the Harmony subsetter yet, we assume we could get better results than downloading and subsetting but probably not as fast as SlideRule.
 
-### Cloud OPeNDAP
+### 3. Cloud OPeNDAP
 * Similar to Harmony, loading the data should be faster than downloading and subsetting in the client side, we'll have to measure if the subsetting is as fast as SlideRule.
 
 ## Proposed methods/tools
 
 As we can notice, the subsetting in the current methods relies on services, one of the advantages of cloud native formats is that we could push that to the client and take advantage of the metadata to do spatial operations "on-the-fly" without having to need a service.
 
-### Baseline: search and access using earthaccess, subset the data with geopandas or xarray. 
+### 1. Baseline: search and access using earthaccess, subset the data with geopandas or xarray. 
 
 * This would be the "naive" approach and will require to load full trajectories into memory to do the spatial filtering after having them into a dataframe. 
 * There are 6 trajectories per file, each trajectory from the overlapping files needs to be subsetted.
@@ -88,7 +89,7 @@ As we can notice, the subsetting in the current methods relies on services, one 
 
 > Improvements: the one improvement we test here is that fsspec could potentially give us enough performance that loading the whole trajectory should be Ok as long as we have enough memory.
 
-### VirtualiZarr: Trying to use dmrpp files to load the metadata fast and access chunks in the HDF5 files using Zarr
+### 2. VirtualiZarr: Trying to use dmrpp files to load the metadata fast and access chunks in the HDF5 files using Zarr
 
 * This has been tested with regular gridded data (L4) with good results, aggregation into a logical cube is tricky with point cloud data. 
 * NSIDC is producing a somewhat outdated flat version of the dmrpp files, in order to read the dmrpp with VirtualiZarr we need to use code from [this PR](https://github.com/zarr-developers/VirtualiZarr/pull/757)
@@ -96,7 +97,7 @@ As we can notice, the subsetting in the current methods relies on services, one 
 * The loading of the metadata should be a little faster than reading the entire file but we still need to load the whole trajectory to do the spatial filtering. (None of the HDF5 at NASA has a build-int spatial index at the chunk level AFAIK)
 * After we open our VirtualiZarr store using Miguel's PR we could try to serialize the chunk manifest into Parquet and try to open them with the Zarr reader. V3 should be faster thanks to the new async code (see PR [#967](https://github.com/nsidc/earthaccess/pull/967))
 
-### Spatially-aware virtual references: Looking into geoparquet with spatial information at the chunk level.
+### 3. Spatially-aware virtual references: Looking into geoparquet with spatial information at the chunk level.
 
 * HDF5 doesn't come with spatial indexes out of the box, one of the key aspects of cloud native geo is the ability to use an spatial index to sbset on the fly without having to fetch all the chunks first. 
 * dmrpp doesn't include spatial information at the chunk level so this is something that we'll have to extract from the file and use in a geoparquet output.
@@ -107,7 +108,7 @@ As we can notice, the subsetting in the current methods relies on services, one 
 
 Optional: links to manuscripts or technical documents providing background information, context, or other relevant information.
 
-## Project goals and tasks
+### Project goals and tasks
 
 ### Project goals
 
