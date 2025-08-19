@@ -1,71 +1,107 @@
-# Sample Project
+# Virtual Insanity Team
 
-This is an example of how teams can structure their project repositories and format their project README.md file.
+## Virtual Stores and Alternative Access Patterns to Mission Data
 
-When creating a project repository from this template choose "Public" so other participants can follow progress. Add a "topic" to your repository details (click on the gear icon next to the "About" section on the repository page) to help others find your work (e.g. `icesat2-hackweek-2024`).
+This project will explore the potential use of VirtualiZarr, Geoparquet etc as means to improve access patterns to 
+data from the ICESat-2 mission, especially the trajectory-based L2 datasets, ATL03, ATL06 and ATL08.
+One of the premises is that these access patterns will make use the same HDF5 files as the data source (to avoid data duplication) and a layer of chunk manifests that will enable users to bypass the HDF5 library and use Zarr-compatible readers.
 
+> Note: Project name based on Danny Kaufman's idea for [TEMPO+VirtualiZarr](https://earthaccess.readthedocs.io/en/latest/tutorials/virtual_dataset_tutorial_with_TEMPO_Level3/)
 
-## Files and folders in your project repository
+## Collaborators
 
-This template provides the following suggested organizaiton structure for the project repository, but each project team is free to organize their repository as they see fit.
-
-* **`contributors/`**
-<br> Each team member can create their own folder under contributors, within which they can work on their own scripts, notebooks, and other files. Having a dedicated folder for each person helps to prevent conflicts when merging with the main branch. This is a good place for team members to start off exploring data and methods for the project.
-* **`notebooks/`**
-<br> Notebooks that are considered delivered results for the project should go in here.
-* **`scripts/`**
-<br> Code that is shared by the team should go in here (e.g. functions or subroutines). These will be files other than Jupyter Notebooks such as Python scripts (.py).
-* `.gitignore`
-<br> This file sets the files that will be globally ignored by `git` for the project. (e.g. you may want git to ignore temporary files or large data files, [read more about ignoring files here](https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files))
-* `environment.yml`
-<br> `conda` environment description needed to run this project.
-* `README.md`
-<br> Description of the project (see suggested headings below)
-* `model-card.md`
-<br> Description (following a metadata standard) of any machine learning models used in the project
-
-# Recommended content for your README.md file:
-
-(you can remove the content here and above from your final project README.md file so that it begins with the Project or Team Name title below)
-
-# Project or Team Name
-
-## Project Title and Introduction
-
-Provide a brief introduction describing the proposed work. Be sure to also decribe what skills team members will get to learn and practice as part of this project.
-
-### Collaborators
-
-List all participants on the project. Here is a good space to share your personal goals for the hackweek and things you can help with.
+Feel free to add more names!
 
 | Name | Personal goals | Can help with | Role |
 | ------------- | ------------- | ------------- | ------------- |
-| Katherine J. | I want to learn specific python libraries for working with these data  | I can help with understanding our dataset, programming in R  | Project Lead |
-| Rosalind F. | Practice leading a software project | machine learning and python (scipy, scikit-learn) | Project Lead |
-| Alan T. | learning about your dataset | GitHub, Jupyter, cloud computing | Project Helper |
-| Rachel C. | learn to use github, resolve merge conflicts | I am familiar with our dataset | Team Member  |
-| ... | ... | ... | ... |
-| ... | ... | ... | ... |
+| Andy Barrett | I would like to <fill>  | I can help with understanding our dataset, programming in R  | Contributor |
+| Chuck Daniels | I would like to <fill> | machine learning and python (scipy, scikit-learn) | Contributor  |
+| Joe Kennedy | I would like to <fill> | machine learning and python (scipy, scikit-learn) | Contributor |
+| Miguel Jimenez-Urias | I would like to <fill> | GitHub, Jupyter, cloud computing | Contributor |
+| Owen Littlejohns | I would like to <fill> | I am familiar with our dataset | Contributor   |
+| Luis Lopez | I woud like to push HDF5 to the limit, explore cloud native Geo-HDF5 | ... | Contributor/Project Lead |
+| Ben Smith | I would like to <fill> | ... | Contributor |
 
-### The problem
+## The problem
 
-Provide a few sentences describing the problem are you going to explore. If this is a technical exploration of software or data science methods, explain why this work is important in a broader context and specific applications of this work.
+Accessing HDF5 in the cloud is slow, the lack of an spatial index in the HDF5 format, the architecture of the HDF5 client library and the nested structure of the data makes working with these datasets a challenge from the get-go, we would like to explore different ways of accessing trajectory data in HDF5 acknowledging that it would be better if we avoid full data duplication. We could also explore what gain we get if we just use Geoparquet or COPCI instead of HDF5. Knowing what works of could work will benefit other workflows from missions with big and/or complex trajectory data (e.g. NISAR, Tempo, GEDI etc). There are several PRs that need to be merged before we attempt to try some of the potential solutions so we'll have to use code from forks and not-yet-merged branches.
 
 ## Data and Methods
 
-### Data
+Subsetting a region of interest for ATL06(and hopefully ATL03) using the following polygon:
 
-Briefly describe and provide citations for the data that will be used (size, format, how to access).
+```json
 
-### Existing methods
+{
+"type": "FeatureCollection",
+"name": "greenland_aoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+    { "type": "Feature",
+      "properties": { },
+      "geometry": { 
+          "type": "Polygon",
+          "coordinates": [ 
+            [ 
+              [ -45.379436701418982, 62.632384888224848 ],
+              [ -44.620563298581018, 62.632384888224848 ],
+              [ -44.615470340415492, 62.981973185442563 ],
+              [ -45.384529659584508, 62.981973185442563 ],
+              [ -45.379436701418982, 62.632384888224848 ] 
+            ] 
+          ] 
+      }
+    }
+  ]
+}
+```
 
-How would you or others traditionally try to address this problem? Provide any relevant citations to prior work.
+The result of our experiment should be a geoparquet file with all the photon data from the 6 ground tracks containing the following variables in the dataframe:
 
-### Proposed methods/tools
+**ATL06**: lat, long, time, h_li, h_li_sigma, atl06_quality_summary, track_id
+**ATL03**: TBD (Optional for this week)
+**ATL08**: TBD (Optional for this week)
 
-What new approaches would you like to implement for addressing your specific question(s) or application(s)?
+## Existing methods
 
-Will your project use machine learning methods? If so, we invite you to create a [model card](model-card.md)!
+### SlideRule: As of now this would be the best case scenario to [subset a ROI](https://github.com/ICESAT-2HackWeek/icesat2-cookbook/blob/main/notebooks/draft/workflows/greenland_dhdt/dhdt_40km_tile.ipynb)
+* SlideRule is very efficient on getting the data in parallel thanks to the use of an elastic cluster and the [H5Coro](https://github.com/SlideRuleEarth/h5coro) client library. This library uses a pool of threads to fetch data concurrently bypassing the HDF5 client library limitations. 
+* The only downside of SlideRule is that it requires a service and thus there is an overhead in terms of costs and maintainability. 
+* Time to a Geoparquet file using our Greenland ROI (ATL06): **30 seconds**
+
+### Harmony Trajectory Subsetter:
+* We haven't benchmarked the Harmony subsetter yet, we assume we could get better results than downloading and subsetting but probably not as fast as SlideRule.
+
+### Cloud OPeNDAP
+* Similar to Harmony, loading the data should be faster than downloading and subsetting in the client side, we'll have to measure if the subsetting is as fast as SlideRule.
+
+## Proposed methods/tools
+
+As we can notice, the subsetting in the current methods relies on services, one of the advantages of cloud native formats is that we could push that to the client and take advantage of the metadata to do spatial operations "on-the-fly" without having to need a service.
+
+### Baseline: search and access using earthaccess, subset the data with geopandas or xarray. 
+
+* This would be the "naive" approach and will require to load full trajectories into memory to do the spatial filtering after having them into a dataframe. 
+* There are 6 trajectories per file, each trajectory from the overlapping files needs to be subsetted.
+* V7 is cloud optimized but ATL06 still uses V6
+* We can use fsspec form this PR to improve the fetching and caching of bytes in `earthaccess.open()`: [PR 1061](https://github.com/nsidc/earthaccess/pull/1061)
+
+> Improvements: the one improvement we test here is that fsspec could potentially give us enough performance that loading the whole trajectory should be Ok as long as we have enough memory.
+
+### VirtualiZarr: Trying to use dmrpp files to load the metadata fast and access chunks in the HDF5 files using Zarr
+
+* This has been tested with regular gridded data (L4) with good results, aggregation into a logical cube is tricky with point cloud data. 
+* NSIDC is producing a somewhat outdated flat version of the dmrpp files, in order to read the dmrpp with VirtualiZarr we need to use code from [this PR](https://github.com/zarr-developers/VirtualiZarr/pull/757)
+* Once we open the dmrpp files in the current state of things, we'll see a long flattened list of variables in our Xarray dataframe. 
+* The loading of the metadata should be a little faster than reading the entire file but we still need to load the whole trajectory to do the spatial filtering. (None of the HDF5 at NASA has a build-int spatial index at the chunk level AFAIK)
+* After we open our VirtualiZarr store using Miguel's PR we could try to serialize the chunk manifest into Parquet and try to open them with the Zarr reader. V3 should be faster thanks to the new async code (see PR [#967](https://github.com/nsidc/earthaccess/pull/967))
+
+### Spatially-aware virtual references: Looking into geoparquet with spatial information at the chunk level.
+
+* HDF5 doesn't come with spatial indexes out of the box, one of the key aspects of cloud native geo is the ability to use an spatial index to sbset on the fly without having to fetch all the chunks first. 
+* dmrpp doesn't include spatial information at the chunk level so this is something that we'll have to extract from the file and use in a geoparquet output.
+* We won't have to think at the file level, we could use a non overlapping grid to aggregate chunks spatially e.g. Uber's H3 grid
+* If this could be incorporated into the HDF5 files users could use the index to do the same thing without use having to mantain a geoparquet chunk index. This is something Ben mentioned he did for a personal project. 
 
 ### Additional resources or background reading
 
