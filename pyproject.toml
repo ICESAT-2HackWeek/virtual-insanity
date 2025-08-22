@@ -10,7 +10,7 @@ requires = ["hatchling"]
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
-platforms = ["osx-64"]
+platforms = ["osx-64", "linux-64"]
 
 [tool.pixi.pypi-dependencies]
 virtual_insanity = { path = ".", editable = true }
