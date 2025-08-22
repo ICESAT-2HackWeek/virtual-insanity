@@ -35,7 +35,7 @@ def select_from_granules(
     lon_name: str,
     lat_name: str,
     bbox: tuple[float, float, float, float],
-) -> gpd.GeoDataFrame:
+) -> int:
     kwargss = (
         SelectFromGranuleKwargs(
             url=url,
@@ -55,17 +55,21 @@ def select_from_granules(
     logger.info(f"Using process pool with chunksize {chunksize}")
 
     with mp.Pool(initializer=set_log_level, initargs=(logger, level)) as pool:
-        gdfs = pool.imap_unordered(select_from_granule, kwargss, chunksize=chunksize)
-        return t.cast(gpd.GeoDataFrame, pd.concat(gdfs, ignore_index=True, copy=False))
+        row_counts = pool.imap_unordered(
+            select_from_granule, kwargss, chunksize=chunksize
+        )
+        return sum(row_counts)
+        # gdfs = pool.imap_unordered(select_from_granule, kwargss, chunksize=chunksize)
+        # return t.cast(gpd.GeoDataFrame, pd.concat(gdfs, ignore_index=True, copy=False))
 
 
-def select_from_granule(kwargs: SelectFromGranuleKwargs) -> gpd.GeoDataFrame:
+def select_from_granule(kwargs: SelectFromGranuleKwargs) -> int:
     fs: fsspec.AbstractFileSystem
     fs, _ = fsspec.url_to_fs(kwargs["url"], **kwargs["fsspec_kwargs"])
 
     logger.info(f"Reading {kwargs['url']}")
 
-    return geodataframe_from_h5file(
+    gdf = geodataframe_from_h5file(
         fs,
         kwargs["url"],
         group_names=kwargs["group_names"],
@@ -73,6 +77,12 @@ def select_from_granule(kwargs: SelectFromGranuleKwargs) -> gpd.GeoDataFrame:
         lon_path=kwargs["lon_name"],
         lat_path=kwargs["lat_name"],
     ).clip(kwargs["bbox"])
+
+    n_rows = len(gdf)
+    logger.info(f"Selected {n_rows} rows from {kwargs['url']}")
+
+    # TODO write to file and return filename
+    return n_rows
 
 
 def geodataframe_from_h5file(
