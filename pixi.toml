@@ -1,0 +1,21 @@
+[workspace]
+authors = ["Luis Lopez <betolin@gmail.com>"]
+channels = ["conda-forge"]
+name = "virtual-insanity"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+python = "3.13.*"
+xarray = ">=2025.8.0,<2026"
+hvplot = ">=0.12.0,<0.13"
+geoviews = ">=1.14.1,<2"
+zarr = ">=3.1.1,<4"
+jupyterlab = ">=4.4.6,<5"
+geojson = ">=3.2.0,<4"
+
+[pypi-dependencies]
+virtualizarr = { git = "https://github.com/Mikejmnez/VirtualiZarr", branch = "dmrpp_parser" }
+earthaccess = { git = "https://github.com/betolink/earthaccess", branch = "fsspec" }
