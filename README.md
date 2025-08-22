@@ -12,15 +12,15 @@ One of the premises is that these access patterns will make use the same HDF5 fi
 
 Feel free to add more names!
 
-| Name | Personal goals | Can help with | Role |
-| ------------- | ------------- | ------------- | ------------- |
-| Andy Barrett | I would like to <fill>        | ... | Contributor |
-| Chuck Daniels | I would like to <fill>       | ... | Contributor  |
-| Joe Kennedy | I would like to <fill>         | ... | Contributor |
-| Miguel Jimenez-Urias | I would like to <fill>| ... | Contributor |
-| Owen Littlejohns | I would like to <fill>    | ... | Contributor   |
-| Luis Lopez | I woud like to push HDF5 to the limit, explore cloud native Geo-HDF5 | ... | Contributor/Project Lead |
-| Ben Smith | I would like to <fill> | ... | Contributor |
+| Name | Can help with | Role |
+| ------------- | ------------- | ------------- |
+| Andy Barrett | ... | Contributor |
+| Chuck Daniels| ... | Contributor  |
+| Joe Kennedy | ... | Contributor |
+| Miguel Jimenez-Urias | ... | Contributor |
+| Owen Littlejohns | ... | Contributor   |
+| Luis Lopez | ... | Contributor/Project Lead |
+| Ben Smith | ... | Contributor |
 
 
 ## The problem
@@ -69,6 +69,8 @@ The result of our experiment should be a geoparquet file with all the photon dat
 * SlideRule is very efficient on getting the data in parallel thanks to the use of an elastic cluster and the [H5Coro](https://github.com/SlideRuleEarth/h5coro) client library. This library uses a pool of threads to fetch data concurrently bypassing the HDF5 client library limitations. 
 * The only downside of SlideRule is that it requires a service and thus there is an overhead in terms of costs and maintainability. 
 * Time to a Geoparquet file using our Greenland ROI (ATL06): **30 seconds**
+
+Notebook: [SlideRule]
 
 ### 2. Harmony Trajectory Subsetter:
 * We haven't benchmarked the Harmony subsetter yet, we assume we could get better results than downloading and subsetting but probably not as fast as SlideRule.
