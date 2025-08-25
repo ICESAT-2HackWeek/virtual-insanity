@@ -3,6 +3,7 @@ import multiprocessing as mp
 import os
 import typing as t
 from collections.abc import Iterable, Sequence
+from concurrent.futures import ThreadPoolExecutor
 
 import fsspec
 import geopandas as gpd
@@ -52,10 +53,12 @@ def select_from_granules(
     chunksize = 10 if (os.cpu_count() or 1) * 10 <= len(urls) else 1
     level = logging.INFO
     set_log_level(logger, level)
-    logger.info(f"Using process pool with chunksize {chunksize}")
 
     with mp.Pool(initializer=set_log_level, initargs=(logger, level)) as pool:
+        processes = pool._processes  # pyright: ignore[reportAttributeAccessIssue]
+        logger.info(f"Using {processes} processes with chunksize {chunksize}")
         gdfs = pool.imap_unordered(select_from_granule, kwargss, chunksize=chunksize)
+
         return t.cast(gpd.GeoDataFrame, pd.concat(gdfs, ignore_index=True, copy=False))
 
 
