@@ -66,6 +66,7 @@ def parse_args(args: list[str]):
 def main(*, s3: bool, count: int, output: Path):
     import os
 
+    token = os.environ["EARTHDATA_TOKEN"]
     granules = earthaccess.search_data(
         concept_id=parameters.collection_concept_id,
         bounding_box=parameters.bbox,
@@ -85,14 +86,14 @@ def main(*, s3: bool, count: int, output: Path):
             default_block_size=8 * 1024 * 1024,
             **get_s3_credentials(
                 "https://data.nsidc.earthdatacloud.nasa.gov/s3credentials",
-                token=os.environ["EARTHDATA_TOKEN"],
+                token=token,
             ),
         )
         if s3
         else dict(
             cache_type="background",
             block_size=8 * 1024 * 1024,
-            client_kwargs={"trust_env": True},
+            client_kwargs={"headers": {"Authorization": f"Bearer {token}"}},
         )
     )
 
@@ -101,7 +102,7 @@ def main(*, s3: bool, count: int, output: Path):
     # s3://nsidc-cumulus-prod-protected/ATLAS/ATL06/006/2018/10/14/ATL06_20181014064703_02390105_006_02.h5
     # https://data.nsidc.earthdatacloud.nasa.gov/nsidc-cumulus-prod-protected/ATLAS/ATL06/006/2018/10/14/ATL06_20181014064703_02390105_006_02.h5
 
-    n_rows = subset.select_from_granules(
+    gdf = subset.select_from_granules(
         urls,
         fsspec_kwargs,
         group_names=parameters.group_names,
@@ -111,10 +112,10 @@ def main(*, s3: bool, count: int, output: Path):
         bbox=parameters.bbox,
     )
 
-    # logger.info(f"Writing results to {output}")
-    # gdf.to_parquet(output)
+    logger.info(f"Writing results to {output}")
+    gdf.to_parquet(output)
 
-    logger.info(f"Selected a total of {n_rows} rows")
+    logger.info(f"Selected a total of {len(gdf)} rows")
 
 
 if __name__ == "__main__":

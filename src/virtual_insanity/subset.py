@@ -35,7 +35,7 @@ def select_from_granules(
     lon_name: str,
     lat_name: str,
     bbox: tuple[float, float, float, float],
-) -> int:
+) -> gpd.GeoDataFrame:
     kwargss = (
         SelectFromGranuleKwargs(
             url=url,
@@ -55,34 +55,35 @@ def select_from_granules(
     logger.info(f"Using process pool with chunksize {chunksize}")
 
     with mp.Pool(initializer=set_log_level, initargs=(logger, level)) as pool:
-        row_counts = pool.imap_unordered(
-            select_from_granule, kwargss, chunksize=chunksize
-        )
-        return sum(row_counts)
-        # gdfs = pool.imap_unordered(select_from_granule, kwargss, chunksize=chunksize)
-        # return t.cast(gpd.GeoDataFrame, pd.concat(gdfs, ignore_index=True, copy=False))
+        gdfs = pool.imap_unordered(select_from_granule, kwargss, chunksize=chunksize)
+        return t.cast(gpd.GeoDataFrame, pd.concat(gdfs, ignore_index=True, copy=False))
 
 
-def select_from_granule(kwargs: SelectFromGranuleKwargs) -> int:
+def select_from_granule(kwargs: SelectFromGranuleKwargs) -> gpd.GeoDataFrame:
     fs: fsspec.AbstractFileSystem
     fs, _ = fsspec.url_to_fs(kwargs["url"], **kwargs["fsspec_kwargs"])
 
     logger.info(f"Reading {kwargs['url']}")
 
-    gdf = geodataframe_from_h5file(
-        fs,
-        kwargs["url"],
-        group_names=kwargs["group_names"],
-        data_paths=kwargs["dataset_names"],
-        lon_path=kwargs["lon_name"],
-        lat_path=kwargs["lat_name"],
-    ).clip(kwargs["bbox"])
+    try:
+        gdf = geodataframe_from_h5file(
+            fs,
+            kwargs["url"],
+            group_names=kwargs["group_names"],
+            data_paths=kwargs["dataset_names"],
+            lon_path=kwargs["lon_name"],
+            lat_path=kwargs["lat_name"],
+        ).clip(kwargs["bbox"])
+    except Exception as e:
+        # To avoid a pickling problem with exceptions raised from aio-libs (via
+        # fsspec+aiohttp), we'll log exceptions and simply raise RuntimeErrors
+        # instead.  See https://github.com/aio-libs/multidict/issues/340.
+        e.add_note(f"Unable to read {kwargs['url']}")
+        raise
 
-    n_rows = len(gdf)
-    logger.info(f"Selected {n_rows} rows from {kwargs['url']}")
+    logger.info(f"Selected {len(gdf)} rows from {kwargs['url']}")
 
-    # TODO write to file and return filename
-    return n_rows
+    return gdf
 
 
 def geodataframe_from_h5file(
