@@ -46,8 +46,18 @@ def parse_args(args: list[str]):
         "-c",
         "--count",
         type=int,
+        metavar="INT",
         default=-1,
         help="Number of granules in AOI to subset",
+    )
+    parser.add_argument(
+        "-w",
+        "--workers",
+        type=int,
+        dest="n_workers",
+        metavar="INT",
+        default=argparse.SUPPRESS,
+        help="Number of workers/processes to use (default: # of CPUs)",
     )
     parser.add_argument(
         "--s3",
@@ -63,7 +73,7 @@ def parse_args(args: list[str]):
     return parser.parse_args(args)
 
 
-def main(*, s3: bool, count: int, output: Path):
+def main(*, s3: bool, count: int, output: Path, n_workers: int | None = None):
     import os
 
     token = os.environ["EARTHDATA_TOKEN"]
@@ -110,6 +120,7 @@ def main(*, s3: bool, count: int, output: Path):
         lon_name=parameters.lon_name,
         lat_name=parameters.lat_name,
         bbox=parameters.bbox,
+        n_workers=n_workers,
     )
 
     logger.info(f"Writing results to {output}")

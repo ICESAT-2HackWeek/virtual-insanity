@@ -36,6 +36,7 @@ def select_from_granules(
     lon_name: str,
     lat_name: str,
     bbox: tuple[float, float, float, float],
+    n_workers: int | None = None,
 ) -> gpd.GeoDataFrame:
     kwargss = (
         SelectFromGranuleKwargs(
@@ -54,7 +55,11 @@ def select_from_granules(
     level = logging.INFO
     set_log_level(logger, level)
 
-    with mp.Pool(initializer=set_log_level, initargs=(logger, level)) as pool:
+    with mp.Pool(
+        processes=n_workers,
+        initializer=set_log_level,
+        initargs=(logger, level),
+    ) as pool:
         processes = pool._processes  # pyright: ignore[reportAttributeAccessIssue]
         logger.info(f"Using {processes} processes with chunksize {chunksize}")
         gdfs = pool.imap_unordered(select_from_granule, kwargss, chunksize=chunksize)
