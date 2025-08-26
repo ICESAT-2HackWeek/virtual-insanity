@@ -51,7 +51,6 @@ def select_from_granules(
         for url in urls
     )
 
-    chunksize = 10 if (os.cpu_count() or 1) * 10 <= len(urls) else 1
     level = logging.INFO
     set_log_level(logger, level)
 
@@ -61,6 +60,7 @@ def select_from_granules(
         initargs=(logger, level),
     ) as pool:
         processes = pool._processes  # pyright: ignore[reportAttributeAccessIssue]
+        chunksize = min(10, max(1, len(urls) // processes))
         logger.info(f"Using {processes} processes with chunksize {chunksize}")
         gdfs = pool.imap_unordered(select_from_granule, kwargss, chunksize=chunksize)
 
