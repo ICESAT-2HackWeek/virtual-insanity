@@ -36,7 +36,7 @@ def select_from_granules(
     lon_name: str,
     lat_name: str,
     bbox: tuple[float, float, float, float],
-    n_workers: int | None = None,
+    processes: int | None = None,
 ) -> gpd.GeoDataFrame:
     import math
 
@@ -59,13 +59,13 @@ def select_from_granules(
     # See https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
     # See https://s3fs.readthedocs.io/en/latest/#multiprocessing
     with mp.get_context("forkserver").Pool(
-        processes=n_workers,
+        processes=processes,
         initializer=set_log_level,
         initargs=(logger, level),
     ) as pool:
-        processes = pool._processes  # pyright: ignore[reportAttributeAccessIssue]
-        chunksize = min(10, max(1, math.ceil(len(urls) / processes)))
-        logger.info(f"Using {processes} processes with chunksize {chunksize}")
+        processes_: int = pool._processes  # pyright: ignore[reportAttributeAccessIssue]
+        chunksize = min(10, math.ceil(len(urls) / processes_))
+        logger.info(f"Using {processes_} processes with chunksize {chunksize}")
         gdfs = pool.imap_unordered(select_from_granule, kwargss, chunksize=chunksize)
 
         return t.cast(gpd.GeoDataFrame, pd.concat(gdfs, ignore_index=True, copy=False))

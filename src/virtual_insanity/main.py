@@ -43,21 +43,20 @@ def parse_args(args: list[str]):
     )
 
     parser.add_argument(
-        "-c",
-        "--count",
+        "-l",
+        "--limit",
         type=int,
-        metavar="INT",
-        default=-1,
-        help="Number of granules in AOI to subset",
-    )
-    parser.add_argument(
-        "-w",
-        "--workers",
-        type=int,
-        dest="n_workers",
         metavar="INT",
         default=argparse.SUPPRESS,
-        help="Number of workers/processes to use (default: # of CPUs)",
+        help="Limit number of granules in AOI to subset, if not all",
+    )
+    parser.add_argument(
+        "-p",
+        "--processes",
+        type=int,
+        metavar="INT",
+        default=argparse.SUPPRESS,
+        help="Number of processes to use (default: # of CPUs)",
     )
     parser.add_argument(
         "--s3",
@@ -73,14 +72,20 @@ def parse_args(args: list[str]):
     return parser.parse_args(args)
 
 
-def main(*, s3: bool, count: int, output: Path, n_workers: int | None = None):
+def main(
+    output: Path,
+    *,
+    s3: bool = False,
+    limit: int = -1,
+    processes: int | None = None,
+):
     import os
 
     token = os.environ["EARTHDATA_TOKEN"]
     granules = earthaccess.search_data(
         concept_id=parameters.collection_concept_id,
         bounding_box=parameters.bbox,
-        count=count,
+        count=limit,
     )
 
     logger.info(f"Subsetting {len(granules)} granule(s)")
@@ -120,13 +125,11 @@ def main(*, s3: bool, count: int, output: Path, n_workers: int | None = None):
         lon_name=parameters.lon_name,
         lat_name=parameters.lat_name,
         bbox=parameters.bbox,
-        n_workers=n_workers,
+        processes=processes,
     )
 
-    logger.info(f"Writing results to {output}")
+    logger.info(f"Writing {len(gdf)} rows to {output}")
     gdf.to_parquet(output)
-
-    logger.info(f"Selected a total of {len(gdf)} rows")
 
 
 if __name__ == "__main__":
