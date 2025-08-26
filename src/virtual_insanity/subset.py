@@ -38,6 +38,8 @@ def select_from_granules(
     bbox: tuple[float, float, float, float],
     n_workers: int | None = None,
 ) -> gpd.GeoDataFrame:
+    import math
+
     kwargss = (
         SelectFromGranuleKwargs(
             url=url,
@@ -54,13 +56,15 @@ def select_from_granules(
     level = logging.INFO
     set_log_level(logger, level)
 
-    with mp.Pool(
+    # See https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
+    # See https://s3fs.readthedocs.io/en/latest/#multiprocessing
+    with mp.get_context("forkserver").Pool(
         processes=n_workers,
         initializer=set_log_level,
         initargs=(logger, level),
     ) as pool:
         processes = pool._processes  # pyright: ignore[reportAttributeAccessIssue]
-        chunksize = min(10, max(1, len(urls) // processes))
+        chunksize = min(10, max(1, math.ceil(len(urls) / processes)))
         logger.info(f"Using {processes} processes with chunksize {chunksize}")
         gdfs = pool.imap_unordered(select_from_granule, kwargss, chunksize=chunksize)
 
