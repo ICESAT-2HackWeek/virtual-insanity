@@ -1,9 +1,7 @@
 import logging
 import multiprocessing as mp
-import os
 import typing as t
 from collections.abc import Iterable, Sequence
-from concurrent.futures import ThreadPoolExecutor
 
 import fsspec
 import geopandas as gpd
